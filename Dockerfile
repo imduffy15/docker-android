@@ -49,4 +49,33 @@ RUN mkdir -p /root/.android/ && touch /root/.android/repositories.cfg && \
     ${ANDROID_HOME}/tools/bin/sdkmanager "--update" && \
     ${ANDROID_HOME}/tools/bin/sdkmanager "build-tools;${BUILD_TOOLS}" "platform-tools" "platforms;android-${TARGET_SDK}" "extras;android;m2repository" "extras;google;google_play_services" "extras;google;m2repository" "emulator"
 
+ENV GROOVY_HOME /opt/groovy
+ENV GROOVY_VERSION 2.5.5
+
+# Install groovy
+
+RUN set -o errexit -o nounset \
+    && echo "Installing build dependencies" \
+    && apk add --no-cache --virtual .build-deps \
+        gnupg \
+    \
+    && echo "Downloading Groovy" \
+    && wget -qO groovy.zip "https://dist.apache.org/repos/dist/release/groovy/${GROOVY_VERSION}/distribution/apache-groovy-binary-${GROOVY_VERSION}.zip" \
+    \
+    && echo "Installing Groovy" \
+    && unzip groovy.zip \
+    && rm groovy.zip \
+    && mkdir -p /opt \
+    && mv "groovy-${GROOVY_VERSION}" "${GROOVY_HOME}/" \
+    && ln -s "${GROOVY_HOME}/bin/grape" /usr/bin/grape \
+    && ln -s "${GROOVY_HOME}/bin/groovy" /usr/bin/groovy \
+    && ln -s "${GROOVY_HOME}/bin/groovyc" /usr/bin/groovyc \
+    && ln -s "${GROOVY_HOME}/bin/groovyConsole" /usr/bin/groovyConsole \
+    && ln -s "${GROOVY_HOME}/bin/groovydoc" /usr/bin/groovydoc \
+    && ln -s "${GROOVY_HOME}/bin/groovysh" /usr/bin/groovysh \
+    && ln -s "${GROOVY_HOME}/bin/java2groovy" /usr/bin/java2groovy \
+    \
+    && echo "Cleaning up build dependencies" \
+    && apk del .build-deps
+
 RUN npm -g install cordova cordova-icon cordova-splash
