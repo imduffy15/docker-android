@@ -49,33 +49,20 @@ RUN mkdir -p /root/.android/ && touch /root/.android/repositories.cfg && \
     ${ANDROID_HOME}/tools/bin/sdkmanager "--update" && \
     ${ANDROID_HOME}/tools/bin/sdkmanager "build-tools;${BUILD_TOOLS}" "platform-tools" "platforms;android-${TARGET_SDK}" "extras;android;m2repository" "extras;google;google_play_services" "extras;google;m2repository" "emulator"
 
-ENV GROOVY_HOME /opt/groovy
-ENV GROOVY_VERSION 2.5.5
+ENV IVY_HOME /cache
+ENV GRADLE_VERSION 2.12
+ENV GRADLE_HOME /usr/local/gradle
+ENV PATH ${PATH}:${GRADLE_HOME}/bin
+ENV GRADLE_USER_HOME /gradle
 
-# Install groovy
+# Install gradle
+WORKDIR /usr/local
+RUN wget  https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip && \
+    unzip gradle-$GRADLE_VERSION-bin.zip && \
+    rm -f gradle-$GRADLE_VERSION-bin.zip && \
+    ln -s gradle-$GRADLE_VERSION gradle && \
+    echo -ne "- with Gradle $GRADLE_VERSION\n" >> /root/.built
 
-RUN set -o errexit -o nounset \
-    && echo "Installing build dependencies" \
-    && apk add --no-cache --virtual .build-deps \
-        gnupg \
-    \
-    && echo "Downloading Groovy" \
-    && wget -qO groovy.zip "https://dist.apache.org/repos/dist/release/groovy/${GROOVY_VERSION}/distribution/apache-groovy-binary-${GROOVY_VERSION}.zip" \
-    \
-    && echo "Installing Groovy" \
-    && unzip groovy.zip \
-    && rm groovy.zip \
-    && mkdir -p /opt \
-    && mv "groovy-${GROOVY_VERSION}" "${GROOVY_HOME}/" \
-    && ln -s "${GROOVY_HOME}/bin/grape" /usr/bin/grape \
-    && ln -s "${GROOVY_HOME}/bin/groovy" /usr/bin/groovy \
-    && ln -s "${GROOVY_HOME}/bin/groovyc" /usr/bin/groovyc \
-    && ln -s "${GROOVY_HOME}/bin/groovyConsole" /usr/bin/groovyConsole \
-    && ln -s "${GROOVY_HOME}/bin/groovydoc" /usr/bin/groovydoc \
-    && ln -s "${GROOVY_HOME}/bin/groovysh" /usr/bin/groovysh \
-    && ln -s "${GROOVY_HOME}/bin/java2groovy" /usr/bin/java2groovy \
-    \
-    && echo "Cleaning up build dependencies" \
-    && apk del .build-deps
+RUN apk update && apk add libstdc++ && rm -rf /var/cache/apk/*
 
 RUN npm -g install cordova cordova-icon cordova-splash
